@@ -1,0 +1,53 @@
+# Environment variables and secrets
+.env
+.env.*
+*.env
+!.env.example
+
+# Dependencies
+node_modules/
+package-lock.json.bak
+
+# Python artifacts and caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# AI Model weights and caches (Downloaded dynamically on startup)
+model_cache/
+models/
+.cache/
+torch_cache/
+speechbrain_cache/
+
+# Build artifacts
+dist/
+build/
+.vite/
+*.tsbuildinfo
+
+# Operating system metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary runtime files & logs
+*.log
+logs.txt
+/tmp/
+*.tmp
+*.wav
+*.mp3
+*.mp4
+*.m4a
+*.webm

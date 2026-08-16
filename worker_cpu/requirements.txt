@@ -1,0 +1,11 @@
+bullmq
+redis
+minio
+sqlalchemy
+psycopg2-binary
+speechbrain
+torchaudio
+google-generativeai
+asyncio
+torchcodec
+soundfile

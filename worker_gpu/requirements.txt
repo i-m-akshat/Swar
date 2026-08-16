@@ -1,0 +1,11 @@
+bullmq
+redis
+minio
+faster-whisper
+torchaudio
+speechbrain
+psycopg2-binary
+numpy
+scipy
+scikit-learn
+asyncio
