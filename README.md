@@ -7,6 +7,10 @@
 [![Fastify](https://img.shields.io/badge/Fastify-Node.js-000000?logo=fastify&logoColor=white)](https://www.fastify.io/)
 [![React](https://img.shields.io/badge/React-Vite-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 
+<p align="center">
+  <img src="assets/vocalis_dashboard.jpg" alt="Vocalis Speech Intelligence Dashboard" width="100%" style="border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
+</p>
+
 **Vocalis** is an end-to-end, privacy-first speech intelligence platform capable of transcribing, translating, and diarizing multi-speaker audio with acoustic graph precision. Powered by **Faster-Whisper Turbo** and **SpeechBrain ECAPA-TDNN** on CUDA, Vocalis decouples acoustic vocal tract clustering from linguistic text, ensuring reliable speaker identification without cross-talk bleed or hallucinated punctuation boundaries.
 
 ---
