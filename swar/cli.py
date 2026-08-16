@@ -1,13 +1,13 @@
 import argparse
 import sys
 import os
-from .pipeline import VocalisEngine
+from .pipeline import SwarEngine
 
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="vocalis",
-        description="🎙️ Vocalis — Speech Intelligence & Acoustic Graph Diarization CLI"
+        prog="swar",
+        description="🎙️ Swar (स्वर) — Speech Intelligence & Acoustic Graph Diarization CLI"
     )
     parser.add_argument("input", help="Path to input audio or video file (.mp3, .wav, .mp4, .m4a, .webm)")
     parser.add_argument("--lang", default=None, help="Spoken language ISO code (e.g. 'en', 'hi', 'es'). Default: auto-detect.")
@@ -24,8 +24,8 @@ def main():
         print(f"Error: Input file '{args.input}' does not exist.", file=sys.stderr)
         sys.exit(1)
 
-    print(f"[Vocalis CLI] Processing '{args.input}'...")
-    engine = VocalisEngine(whisper_model=args.model, device=args.device)
+    print(f"[Swar CLI] Processing '{args.input}'...")
+    engine = SwarEngine(whisper_model=args.model, device=args.device)
     result = engine.process(args.input, language=args.lang, task=args.task)
 
     print(f"\n✨ Processing Complete!")

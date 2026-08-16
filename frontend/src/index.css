@@ -94,6 +94,19 @@ body {
   letter-spacing: -0.03em;
   color: var(--text-primary);
   line-height: 1.1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hindi-badge {
+  font-size: 0.95rem;
+  color: var(--accent-primary);
+  font-weight: 600;
+  background: var(--accent-glow);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-accent);
 }
 
 .site-tagline {

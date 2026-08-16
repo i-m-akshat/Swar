@@ -1,6 +1,6 @@
-# Vocalis — Algorithm & Mathematical Foundations Guide 🧠📐
+# Swar — Algorithm & Mathematical Foundations Guide 🧠📐
 
-This document provides a deep technical and mathematical walkthrough of the algorithms, neural architectures, digital signal processing (DSP) filters, graph Laplacians, and clustering heuristics implemented in **Vocalis**.
+This document provides a deep technical and mathematical walkthrough of the algorithms, neural architectures, digital signal processing (DSP) filters, graph Laplacians, and clustering heuristics implemented in **Swar**.
 
 ---
 
@@ -35,7 +35,7 @@ $$x_{\text{norm}}[n] = \frac{x[n]}{\max_{k} |x[k]| + \epsilon}, \quad \epsilon =
 
 ## 2. Linguistic Decoding & Anti-Repetition Constraints
 
-Vocalis leverages **Faster-Whisper Turbo** (large-v3-turbo, 809M parameters) on CUDA with `int8` quantization.
+Swar leverages **Faster-Whisper Turbo** (large-v3-turbo, 809M parameters) on CUDA with `int8` quantization.
 
 ### Deterministic Greedy Decoding
 To eliminate temperature-induced hallucination loops and non-deterministic timestamp drift on long recordings:
@@ -44,7 +44,7 @@ To eliminate temperature-induced hallucination loops and non-deterministic times
 * $\text{beam\_size} = 1, \quad \text{best\_of} = 1$
 
 ### Multilingual Anti-Looping Penalty
-Multilingual or code-switched audio (e.g. Hindi-English) can trigger autoregressive token loops. Vocalis enforces:
+Multilingual or code-switched audio (e.g. Hindi-English) can trigger autoregressive token loops. Swar enforces:
 * $\text{repetition\_penalty} = 1.2$
 * $\text{no\_repeat\_ngram\_size} = 3$
 
@@ -74,7 +74,7 @@ Traditional systems pad short utterances ($x < 2.5\text{s}$) by grabbing symmetr
 $$\text{Sim}(\mathbf{e}_{\text{padded}}, \mathbf{e}_{\text{previous\_speaker}}) \uparrow 0.632 \quad (\text{False Merge!})$$
 
 ### Circular Self-Reflection Solution
-Vocalis pads short utterances using periodic self-reflection of only the speaker's own acoustic syllables:
+Swar pads short utterances using periodic self-reflection of only the speaker's own acoustic syllables:
 $$x_{\text{padded}}[n] = x\left[ n \pmod L \right], \quad \forall n \in [0, N_{\text{target}}-1]$$
 where $L$ is the length of the short utterance.
 
@@ -104,7 +104,7 @@ Speaker representation uses the **ECAPA-TDNN** (Emphasized Channel Attention, Pr
 Given $N$ acoustic window embeddings $\mathbf{E} \in \mathbb{R}^{N \times 192}$, the dense cosine similarity matrix is:
 $$S_{ij} = \mathbf{e}_i^\top \mathbf{e}_j = \cos(\theta_{ij})$$
 
-Rather than using a fixed threshold (e.g. $0.50$), Vocalis computes the adaptive similarity floor $\theta$ from the positive distribution of the specific recording:
+Rather than using a fixed threshold (e.g. $0.50$), Swar computes the adaptive similarity floor $\theta$ from the positive distribution of the specific recording:
 $$\theta = \text{clip}\left( \text{percentile}_{75}(\mathbf{S}_{>0.1}), \; 0.40, \; 0.65 \right)$$
 
 ### Symmetrized Mutual $k$-NN Construction
@@ -137,7 +137,7 @@ $$K^* = \arg\max_{k \in [k_{\min}, k_{\max}]} \left( \lambda_{k+1} - \lambda_k \
 
 ## 8. Hierarchical Average Linkage & Minority Cluster Pruning
 
-Spectral clustering yields initial cluster assignments. Vocalis then executes two refinement passes:
+Spectral clustering yields initial cluster assignments. Swar then executes two refinement passes:
 
 ### 1. Hierarchical Average Linkage
 Computes pairwise cluster distances across all constituent vectors to prevent transitive chaining drift:
@@ -194,5 +194,5 @@ In conversational audio (with compression artifacts, room reverberation, and dis
 | **i-vector (GMM-UBM)** | Non-neural | 400-d | ~5.2% | Static frame averaging |
 | **x-vector (TDNN)** | 4.2M | 512-d | ~2.4% | Standard temporal pooling |
 | **ResNet-34 SE** | 21.0M | 256-d | ~1.3% | 2D Spectrogram Convolutions |
-| **ECAPA-TDNN (Vocalis Engine)** | **6.2M** | **192-d** | **~0.95%** | **Squeeze-and-Excitation + Multi-Layer Feature Aggregation + Attentive Statistical Pooling** |
+| **ECAPA-TDNN (Swar Engine)** | **6.2M** | **192-d** | **~0.95%** | **Squeeze-and-Excitation + Multi-Layer Feature Aggregation + Attentive Statistical Pooling** |
 

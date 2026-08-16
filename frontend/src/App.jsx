@@ -381,7 +381,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `vocalis-transcript-${jobId || "export"}.txt`;
+    a.download = `swar-transcript-${jobId || "export"}.txt`;
     a.click();
   };
 
@@ -404,7 +404,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `vocalis-subtitles-${jobId || "export"}.srt`;
+    a.download = `swar-subtitles-${jobId || "export"}.srt`;
     a.click();
   };
 
@@ -412,14 +412,14 @@ export default function App() {
   const downloadMarkdownReport = () => {
     let mdContent = intelligence?.raw_markdown;
     if (!mdContent) {
-      mdContent = `# 🎙️ Vocalis Dialogue Transcript\n\n` +
+      mdContent = `# 🎙️ Swar (स्वर) Dialogue Transcript\n\n` +
         transcripts.map(t => `**[${fmt(t.start_time)} → ${fmt(t.end_time)}] ${t.speaker_name || "Unknown"}:**\n${t.text}\n`).join("\n");
     }
     const blob = new Blob([mdContent], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `vocalis-report-${jobId || "export"}.md`;
+    a.download = `swar-report-${jobId || "export"}.md`;
     a.click();
   };
 
@@ -439,7 +439,7 @@ export default function App() {
             <IconWaveform />
           </div>
           <div>
-            <h1 className="site-title">Vocalis</h1>
+            <h1 className="site-title">Swar <span className="hindi-badge">स्वर</span></h1>
             <p className="site-tagline">Speech Intelligence &amp; Acoustic Graph Diarization Engine</p>
           </div>
         </div>

@@ -22,7 +22,7 @@ from sklearn.cluster import SpectralClustering
 from sklearn.metrics.pairwise import cosine_similarity as sk_cosine_similarity
 
 
-class VocalisTurn:
+class SwarTurn:
     def __init__(self, start: float, end: float, speaker: str, text: str):
         self.start = start
         self.end = end
@@ -41,7 +41,7 @@ class VocalisTurn:
         return f"[{self.start:.2f}s -> {self.end:.2f}s] {self.speaker}: {self.text}"
 
 
-class VocalisResult:
+class SwarResult:
     def __init__(self, turns: list, language: str, language_prob: float, speakers: list, duration: float):
         self.turns = turns
         self.language = language
@@ -64,7 +64,7 @@ class VocalisResult:
 
     def to_markdown(self) -> str:
         lines = [
-            f"# 🎙️ Vocalis Dialogue Transcript",
+            f"# 🎙️ Swar (स्वर) Dialogue Transcript",
             f"* **Language:** {self.language.upper()} ({self.language_prob*100:.1f}%)",
             f"* **Speakers ({len(self.speakers)}):** {', '.join(self.speakers)}",
             f"* **Duration:** {self.duration:.1f}s\n",
@@ -75,29 +75,29 @@ class VocalisResult:
         return "\n".join(lines)
 
 
-class VocalisEngine:
+class SwarEngine:
     def __init__(self, whisper_model: str = "turbo", device: str = None, compute_type: str = "int8"):
         if device is None:
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
         else:
             self.device = device
 
-        print(f"[Vocalis] Initializing Faster-Whisper '{whisper_model}' on {self.device} ({compute_type})...")
+        print(f"[Swar] Initializing Faster-Whisper '{whisper_model}' on {self.device} ({compute_type})...")
         self.whisper = WhisperModel(
             whisper_model,
             device=self.device,
             compute_type=compute_type if self.device == "cuda" else "float32"
         )
 
-        print(f"[Vocalis] Initializing SpeechBrain ECAPA-TDNN on {self.device}...")
+        print(f"[Swar] Initializing SpeechBrain ECAPA-TDNN on {self.device}...")
         self.classifier = EncoderClassifier.from_hparams(
             source="speechbrain/spkrec-ecapa-voxceleb",
             savedir=os.path.expanduser("~/.cache/speechbrain"),
             run_opts={"device": self.device}
         )
-        print("[Vocalis] Engine initialized successfully.")
+        print("[Swar] Engine initialized successfully.")
 
-    def process(self, audio_or_video_path: str, language: str = None, task: str = "transcribe") -> VocalisResult:
+    def process(self, audio_or_video_path: str, language: str = None, task: str = "transcribe") -> SwarResult:
         if not os.path.exists(audio_or_video_path):
             raise FileNotFoundError(f"Media file not found: {audio_or_video_path}")
 
@@ -155,7 +155,7 @@ class VocalisEngine:
                     raw_segments.append({"start": s.start, "end": s.end, "text": s.text.strip()})
 
             if not raw_segments:
-                return VocalisResult([], detected_lang, detected_prob, [], 0.0)
+                return SwarResult([], detected_lang, detected_prob, [], 0.0)
 
             # 4. Audio Preprocessing: 80 Hz Butterworth + Normalization
             audio, fs = torchaudio.load(tmp_audio)
@@ -195,7 +195,7 @@ class VocalisEngine:
                 speaker_labels = ["Speaker 1"] * len(raw_segments)
 
             turns = [
-                VocalisTurn(
+                SwarTurn(
                     start=raw_segments[i]["start"],
                     end=raw_segments[i]["end"],
                     speaker=speaker_labels[i],
@@ -207,7 +207,7 @@ class VocalisEngine:
             speakers = sorted(list(set(speaker_labels)))
             total_dur = raw_segments[-1]["end"] if raw_segments else 0.0
 
-            return VocalisResult(turns, detected_lang, detected_prob, speakers, total_dur)
+            return SwarResult(turns, detected_lang, detected_prob, speakers, total_dur)
         finally:
             if os.path.exists(tmp_audio):
                 os.remove(tmp_audio)

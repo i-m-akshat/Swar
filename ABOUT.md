@@ -1,6 +1,6 @@
-# About Vocalis — Speech Intelligence & Speaker Diarization 🎙️✨
+# About Swar (स्वर) — Speech Intelligence & Speaker Diarization 🎙️✨
 
-**Vocalis** is an open-source, privacy-first speech intelligence platform designed to transcribe, translate, and separate speakers with acoustic precision.
+**Swar** is an open-source, privacy-first speech intelligence platform designed to transcribe, translate, and separate speakers with acoustic precision.
 
 ---
 
@@ -14,9 +14,9 @@ Most standard speech recognition tools (like basic Whisper wrappers or cloud STT
 
 ---
 
-## 💡 How Vocalis Solves This
+## 💡 How Swar Solves This
 
-Vocalis decouples **what was said** (linguistic text) from **who said it** (acoustic vocal tract geometry):
+Swar decouples **what was said** (linguistic text) from **who said it** (acoustic vocal tract geometry):
 
 ```text
 ┌─────────────────────────┐           ┌─────────────────────────┐
@@ -35,15 +35,15 @@ Vocalis decouples **what was said** (linguistic text) from **who said it** (acou
 ```
 
 1. **Acoustic-First Slicing:** Speaker turns are separated based on physical silence pauses ($\ge 280\text{ms}$) and acoustic energy drops, ensuring true conversational boundaries.
-2. **Circular Self-Reflection:** When analyzing short phrases (*"Yeah"*, *"Got it"*), Vocalis repeats only the speaker's own syllables rather than grabbing surrounding audio, eliminating neighbor contamination.
-3. **Adaptive Graph Diarization:** Instead of guessing a fixed number of speakers, Vocalis builds a similarity graph and uses Laplacian Eigengap analysis to automatically discover the true number of participants.
-4. **Multi-Sample Voiceprints:** Vocalis learns what a person sounds like across multiple sentences and devices, allowing you to name a speaker once and have Vocalis recognize them in future recordings.
+2. **Circular Self-Reflection:** When analyzing short phrases (*"Yeah"*, *"Got it"*), Swar repeats only the speaker's own syllables rather than grabbing surrounding audio, eliminating neighbor contamination.
+3. **Adaptive Graph Diarization:** Instead of guessing a fixed number of speakers, Swar builds a similarity graph and uses Laplacian Eigengap analysis to automatically discover the true number of participants.
+4. **Multi-Sample Voiceprints:** Swar learns what a person sounds like across multiple sentences and devices, allowing you to name a speaker once and have Swar recognize them in future recordings.
 
 ---
 
 ## 🚀 Key Use Cases
 
-| Use Case | How Vocalis Helps |
+| Use Case | How Swar Helps |
 | :--- | :--- |
 | **🎙️ Podcasts & Video Interviews** | Accurately distinguishes the host from the guest, even in fast-paced debates, and exports color-coded transcripts and SRT subtitles. |
 | **💼 Executive Boardroom Meetings** | Automatically tracks action items by speaker identity and preserves confidentiality by keeping all data local on your hardware. |
@@ -64,9 +64,9 @@ Vocalis decouples **what was said** (linguistic text) from **who said it** (acou
 
 ---
 
-## 📊 Comparison: Vocalis vs. Cloud Speech APIs
+## 📊 Comparison: Swar vs. Cloud Speech APIs
 
-| Feature | Vocalis Platform 🎙️ | AWS Transcribe / Google STT | Generic Open-Source Whisper |
+| Feature | Swar Platform 🎙️ | AWS Transcribe / Google STT | Generic Open-Source Whisper |
 | :--- | :--- | :--- | :--- |
 | **Data Privacy** | **100% Local / Air-Gapped** | Sent to third-party cloud | 100% Local |
 | **Speaker Diarization** | **ECAPA-TDNN + Graph Laplacian** | Basic probabilistic GMM | ❌ No diarization (text only) |

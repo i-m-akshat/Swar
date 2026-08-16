@@ -1,6 +1,6 @@
-# Vocalis Frontend — User Interface & Media Intelligence Client 🖥️✨
+# Swar Frontend — User Interface & Media Intelligence Client 🖥️✨
 
-The **Vocalis Frontend** is a modern, responsive web application built with **React 18**, **Vite**, and **Vanilla CSS**. It provides synchronized media playback, real-time transcript exploration, dynamic speaker turn colorization, live search highlighting, and biometric voiceprint profile management.
+The **Swar Frontend** is a modern, responsive web application built with **React 18**, **Vite**, and **Vanilla CSS**. It provides synchronized media playback, real-time transcript exploration, dynamic speaker turn colorization, live search highlighting, and biometric voiceprint profile management.
 
 ---
 

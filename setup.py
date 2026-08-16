@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="vocalis",
+    name="swar",
     version="1.0.0",
-    description="Speech Intelligence & Acoustic Graph Diarization Engine",
-    author="Vocalis Open Source Team",
+    description="Swar (स्वर) — Speech Intelligence & Acoustic Graph Diarization Engine",
+    author="Swar Open Source Team",
     packages=find_packages(),
     install_requires=[
         "torch>=2.0.0",
@@ -17,7 +17,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "vocalis=vocalis.cli:main",
+            "swar=swar.cli:main",
         ],
     },
     python_requires=">=3.9",

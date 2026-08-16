@@ -1,6 +1,6 @@
-# Vocalis — Production Cloud Deployment & Hybrid Hosting Guide ☁️🚀
+# Swar — Production Cloud Deployment & Hybrid Hosting Guide ☁️🚀
 
-This guide provides a complete, step-by-step production deployment manual for **Vocalis**. It covers a modern **Hybrid-Cloud Architecture** that achieves **90% cost savings** by running:
+This guide provides a complete, step-by-step production deployment manual for **Swar**. It covers a modern **Hybrid-Cloud Architecture** that achieves **90% cost savings** by running:
 1. **Serverless GPUs on [Modal.com](https://modal.com):** Scales GPU compute to zero ($0.00/hr when idle) for Whisper Turbo and SpeechBrain ECAPA-TDNN.
 2. **Standard Cloud Compute on AWS EC2 / DigitalOcean / Hetzner:** Runs the Fastify API Gateway, React Frontend, Redis BullMQ, and PostgreSQL with `pgvector`.
 3. **Cloud Object Storage (AWS S3 / Cloudflare R2):** Replaces local MinIO with globally distributed, durable object storage.
@@ -69,10 +69,10 @@ import modal
 import os
 
 # Define the Modal App
-app = modal.App("vocalis-gpu-engine")
+app = modal.App("swar-gpu-engine")
 
 # Persistent Model Cache Volume (Avoids redownloading model weights)
-model_volume = modal.Volume.from_name("vocalis-model-cache", create_if_missing=True)
+model_volume = modal.Volume.from_name("swar-model-cache", create_if_missing=True)
 
 # Custom Container Image with CUDA, Faster-Whisper, SpeechBrain & FFmpeg
 gpu_image = (
@@ -97,7 +97,7 @@ gpu_image = (
     timeout=600,                     # 10 minute maximum per long meeting
     scaledown_window=120             # Keep warm for 2 minutes between jobs
 )
-class VocalisGPUWorker:
+class SwarGPUWorker:
     @modal.enter()
     def load_models(self):
         """Initializes Whisper and SpeechBrain models into GPU VRAM on container startup."""
@@ -234,7 +234,7 @@ class VocalisGPUWorker:
 @app.function()
 @modal.web_endpoint(method="POST")
 def api_diarize(data: dict):
-    worker = VocalisGPUWorker()
+    worker = SwarGPUWorker()
     return worker.process_media.remote(
         audio_url=data["audio_url"],
         language=data.get("language"),
@@ -247,7 +247,7 @@ def api_diarize(data: dict):
 modal deploy modal_worker.py
 ```
 Modal will output a permanent HTTPS endpoint:
-`https://your-workspace-name--vocalis-gpu-engine-api-diarize.modal.run`
+`https://your-workspace-name--swar-gpu-engine-api-diarize.modal.run`
 
 ---
 
@@ -294,11 +294,11 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:StrongProductionPassword@db:5432/vad_db
       - REDIS_HOST=redis
-      - S3_BUCKET=vocalis-media-uploads
+      - S3_BUCKET=swar-media-uploads
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_REGION=us-east-1
-      - MODAL_API_URL=https://your-workspace--vocalis-gpu-engine-api-diarize.modal.run
+      - MODAL_API_URL=https://your-workspace--swar-gpu-engine-api-diarize.modal.run
     depends_on:
       - db
       - redis
@@ -364,7 +364,7 @@ For high-availability enterprise environments, replace containerized DB/Redis wi
 ### Setting S3 48-Hour Lifecycle Rule via AWS CLI:
 ```bash
 aws s3api put-bucket-lifecycle-configuration \
-  --bucket vocalis-media-uploads \
+  --bucket swar-media-uploads \
   --lifecycle-configuration '{
     "Rules": [{
       "ID": "AutoExpireMedia48h",
@@ -380,7 +380,7 @@ aws s3api put-bucket-lifecycle-configuration \
 ## 6. Security, TLS Termination & Secrets Management
 
 1. **Automatic SSL / TLS Certificates:**
-   Place Cloudflare in front of your EC2 instance for free DDoS protection and automatic SSL (`https://vocalis.yourdomain.com`).
+   Place Cloudflare in front of your EC2 instance for free DDoS protection and automatic SSL (`https://swar.yourdomain.com`).
 2. **Modal API Key Authentication:**
    Protect your Modal endpoint by requiring an authorization header:
    ```python
@@ -401,7 +401,7 @@ aws s3api put-bucket-lifecycle-configuration \
 ### Traditional Dedicated GPU Hosting (AWS `g4dn.xlarge` 24/7):
 * 1x NVIDIA T4 Instance: **~$380.00 / month** (billed continuously even when idle).
 
-### Vocalis Hybrid Architecture (EC2 + Modal Serverless):
+### Swar Hybrid Architecture (EC2 + Modal Serverless):
 * **EC2 `t4g.small` (Web Gateway & DB):** $12.00 / month
 * **Cloudflare R2 Storage (100GB + $0 Egress):** $1.50 / month
 * **Modal Serverless GPU (NVIDIA T4 @ $0.000164/sec):**

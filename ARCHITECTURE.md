@@ -1,16 +1,16 @@
-# Vocalis — System Architecture & Software Engineering Guide 🏛️
+# Swar — System Architecture & Software Engineering Guide 🏛️
 
-This document details the software architecture, microservices topology, asynchronous queue workflows, storage lifecycles, and database designs of **Vocalis**. It is written specifically for software engineers, backend developers, and systems architects.
+This document details the software architecture, microservices topology, asynchronous queue workflows, storage lifecycles, and database designs of **Swar**. It is written specifically for software engineers, backend developers, and systems architects.
 
 ---
 
 ## 🗺️ High-Level System Topology
 
-Vocalis is built as an event-driven, containerized microservices platform running across six specialized services:
+Swar is built as an event-driven, containerized microservices platform running across six specialized services:
 
 ```text
                                   ┌───────────────────────────────┐
-                                  │      Vocalis Web App          │
+                                  │      Swar Web App          │
                                   │   (React + Vite + Vanilla CSS)│
                                   └───────────────┬───────────────┘
                                                   │ HTTP / JSON
@@ -57,7 +57,7 @@ Vocalis is built as an event-driven, containerized microservices platform runnin
 sequenceDiagram
     autonumber
     actor User
-    participant Frontend as Vocalis React UI
+    participant Frontend as Swar React UI
     participant Backend as Fastify Gateway
     participant MinIO as MinIO Object Storage
     participant Redis as Redis (BullMQ)
@@ -156,7 +156,7 @@ CREATE TABLE voiceprint_audit_logs (
 
 ## 🛡️ Storage Lifecycle & Data Retention Architecture
 
-Large video files (e.g. 2GB 4K recordings) can rapidly deplete disk storage if left indefinitely. Vocalis implements a **Tiered Retention Lifecycle**:
+Large video files (e.g. 2GB 4K recordings) can rapidly deplete disk storage if left indefinitely. Swar implements a **Tiered Retention Lifecycle**:
 
 1. **Hot Ingestion Tier (MinIO):**
    * Raw video and audio files are stored in the `videos` MinIO bucket.

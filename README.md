@@ -1,4 +1,4 @@
-# Vocalis — Speech Intelligence & Acoustic Graph Diarization Engine 🎙️⚡
+# Swar (स्वर) — Speech Intelligence & Acoustic Graph Diarization Engine 🎙️⚡
 
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.2.1-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
@@ -8,10 +8,10 @@
 [![React](https://img.shields.io/badge/React-Vite-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 
 <p align="center">
-  <img src="assets/vocalis_dashboard.jpg" alt="Vocalis Speech Intelligence Dashboard" width="100%" style="border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
+  <img src="assets/swar_dashboard.jpg" alt="Swar Speech Intelligence Dashboard" width="100%" style="border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
 </p>
 
-**Vocalis** is an end-to-end, privacy-first speech intelligence platform capable of transcribing, translating, and diarizing multi-speaker audio with acoustic graph precision. Powered by **Faster-Whisper Turbo** and **SpeechBrain ECAPA-TDNN** on CUDA, Vocalis decouples acoustic vocal tract clustering from linguistic text, ensuring reliable speaker identification without cross-talk bleed or hallucinated punctuation boundaries.
+**Swar** is an end-to-end, privacy-first speech intelligence platform capable of transcribing, translating, and diarizing multi-speaker audio with acoustic graph precision. Powered by **Faster-Whisper Turbo** and **SpeechBrain ECAPA-TDNN** on CUDA, Swar decouples acoustic vocal tract clustering from linguistic text, ensuring reliable speaker identification without cross-talk bleed or hallucinated punctuation boundaries.
 
 ---
 
@@ -42,7 +42,7 @@
 
 ```text
 ┌────────────────────────┐
-│   Vocalis Web Client   │ ◄─── Modern Dark UI (React + Vanilla CSS)
+│   Swar Web Client   │ ◄─── Modern Dark UI (React + Vanilla CSS)
 │ (http://localhost:5173)│
 └───────────┬────────────┘
             │ HTTP / REST
@@ -81,8 +81,8 @@
 
 ### 2. Setup Environment
 ```bash
-git clone https://github.com/your-org/vocalis.git
-cd vocalis
+git clone https://github.com/your-org/swar.git
+cd swar
 cp .env.example .env
 ```
 
@@ -92,7 +92,7 @@ docker compose up -d --build
 ```
 
 ### 4. Access the Application
-* **Vocalis UI:** [http://localhost:5173](http://localhost:5173)
+* **Swar UI:** [http://localhost:5173](http://localhost:5173)
 * **Fastify Backend API:** [http://localhost:3000](http://localhost:3000)
 * **MinIO Console:** [http://localhost:9001](http://localhost:9001) (`minioadmin` / `minioadmin`)
 
