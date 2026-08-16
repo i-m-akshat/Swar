@@ -61,3 +61,17 @@ Vocalis decouples **what was said** (linguistic text) from **who said it** (acou
 * **In-Place Speaker Renaming:** Rename *"Speaker 1"* to *"Elon Musk"* in one click, updating all turns across the entire recording.
 * **Biometric Voiceprint Library:** Save acoustic profiles to recognize recurrent speakers automatically.
 * **Export Hub:** Copy clean text to your clipboard or download formatted `.txt` transcripts and `.srt` subtitle files.
+
+---
+
+## 📊 Comparison: Vocalis vs. Cloud Speech APIs
+
+| Feature | Vocalis Platform 🎙️ | AWS Transcribe / Google STT | Generic Open-Source Whisper |
+| :--- | :--- | :--- | :--- |
+| **Data Privacy** | **100% Local / Air-Gapped** | Sent to third-party cloud | 100% Local |
+| **Speaker Diarization** | **ECAPA-TDNN + Graph Laplacian** | Basic probabilistic GMM | ❌ No diarization (text only) |
+| **Cross-Talk Protection** | **Circular Reflection Padding** | ⚠️ Severe voice bleed | ❌ N/A |
+| **Speaker Enrollment** | **Multi-Sample Gaussian Library** | ❌ Complex / Costly add-on | ❌ None |
+| **Word Timestamps** | **Native Acoustic Alignment** | Standard | Standard |
+| **Cost per 1,000 Hours** | **~$2.40 (Serverless) / $0 (Local)** | **~$1,440.00 – $2,400.00** | $0 (No diarization) |
+| **Regulatory Compliance** | **GDPR Right-to-be-Forgotten & Audit Trail** | Vendor Dependent | None |

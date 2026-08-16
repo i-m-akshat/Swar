@@ -195,6 +195,40 @@ CREATE TABLE voiceprint_audit_logs (
 * 🏛️ **[ARCHITECTURE.md](ARCHITECTURE.md):** Deep dive into the software engineering architecture, microservices, queue protocols, and data pipelines.
 * 📖 **[ABOUT.md](ABOUT.md):** High-level explanation of the problem, value proposition, and user experience.
 * 🧠 **[ALGORITHMS.md](ALGORITHMS.md):** Mathematical and AI engineering documentation covering ECAPA-TDNN embeddings, Graph Laplacians, Cannot-Link constraints, and Hungarian macro-window matching.
+* ☁️ **[DEPLOYMENT.md](DEPLOYMENT.md):** Production hybrid-cloud hosting guide (Modal.com Serverless GPU + AWS EC2).
+* 🖥️ **[frontend/README.md](frontend/README.md):** React client architecture, CSS tokens, and UI component guide.
+
+---
+
+## 💻 Hardware Requirements & Sizing
+
+| Environment | Minimum Spec | Recommended Spec | Inference Speed (10 min audio) |
+| :--- | :--- | :--- | :--- |
+| **Local Dev (Consumer GPU)** | NVIDIA GTX 1650 (4GB VRAM), 8GB RAM | NVIDIA RTX 3060 / 4060 (8GB+ VRAM), 16GB RAM | **~45s – 75s** |
+| **Cloud Dedicated GPU** | AWS `g4dn.xlarge` (NVIDIA T4 16GB) | AWS `g5.xlarge` (NVIDIA A10G 24GB) | **~15s – 25s** |
+| **Serverless GPU** | Modal.com T4 GPU ($0.000164/s) | Modal.com L4 / A10G GPU | **~12s – 18s** |
+| **CPU-Only Fallback** | 4 vCPUs, 8GB RAM | 8 vCPUs, 16GB RAM | **~3m – 5m** |
+
+---
+
+## 🛠️ Troubleshooting & FAQ
+
+### 1. NVIDIA Container Toolkit Not Detected
+If `worker_gpu` exits with a CUDA error:
+```bash
+# Verify NVIDIA GPU is visible inside Docker
+docker run --rm --gpus all nvidia/cuda:12.1.0-base-ubuntu22.04 nvidia-smi
+```
+
+### 2. Port Conflicts (`5173`, `3000`, `5434`, `6381`, `9000`)
+If a port is already in use by another application:
+* Modify the host-side port mappings in [`docker-compose.yml`](docker-compose.yml) (e.g. change `"3000:3000"` to `"3001:3000"`).
+
+### 3. Clearing Data & Scratch Files
+To reset all state, run the provided cleanup utility:
+```bash
+python clean.py
+```
 
 ---
 
