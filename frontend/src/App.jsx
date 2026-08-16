@@ -459,7 +459,6 @@ export default function App() {
           <div>
             <h1 className="site-title">
               <span className="hindi-main-title">स्वर</span>
-              <span className="victorian-cursive-title">Swar</span>
             </h1>
             <p className="site-tagline">Speech Intelligence &amp; Acoustic Graph Diarization Engine</p>
           </div>

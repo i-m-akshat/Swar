@@ -118,31 +118,15 @@ body {
 
 .hindi-main-title {
   font-family: 'Kalam', 'Ranga', 'Rozha One', cursive, serif;
-  font-size: 2.9rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: 2.15rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
   background: linear-gradient(135deg, hsl(43, 98%, 76%), hsl(38, 92%, 58%), hsl(24, 88%, 52%));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 14px rgba(245, 158, 11, 0.3));
-  line-height: 0.95;
-  display: inline-block;
-  transform: translateY(2px);
-}
-
-.victorian-cursive-title {
-  font-family: 'Great Vibes', 'Pinyon Script', cursive;
-  font-size: 2.6rem;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  background: linear-gradient(135deg, hsl(45, 100%, 80%), hsl(38, 95%, 62%), hsl(28, 90%, 54%));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 12px rgba(245, 158, 11, 0.25));
+  filter: drop-shadow(0 2px 10px rgba(245, 158, 11, 0.25));
   line-height: 1;
   display: inline-block;
-  transform: rotate(-3deg) translateY(-2px);
-  margin-left: 0.15rem;
 }
 
 .site-tagline {
