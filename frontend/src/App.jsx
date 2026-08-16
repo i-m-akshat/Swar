@@ -38,6 +38,23 @@ function fmt(secs) {
 }
 
 /* ─────────────────────── Icons ─────────────────────────────── */
+const IconLotus = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    {/* Central Lotus Petal */}
+    <path d="M12 2.5C10.5 6 9 9.5 9 13.5c0 2.2 1.34 4 3 4s3-1.8 3-4c0-4-1.5-7.5-3-11z" fill="currentColor" fillOpacity="0.2" />
+    {/* Inner Left Petal */}
+    <path d="M12 17.5c-3 0-6.5-1.5-8.5-5.5 2.2-1.2 5.2-1.5 8.5.5" />
+    {/* Inner Right Petal */}
+    <path d="M12 17.5c3 0 6.5-1.5 8.5-5.5-2.2-1.2-5.2-1.5-8.5.5" />
+    {/* Outer Left Petal */}
+    <path d="M3.5 12c-1.5 3-1.2 5.5.5 7 2.2 2 5.5 1 8-1.5" />
+    {/* Outer Right Petal */}
+    <path d="M20.5 12c1.5 3 1.2 5.5-.5 7-2.2 2-5.5 1-8-1.5" />
+    {/* Base Calyx */}
+    <path d="M7.5 21.5c2.5 1 6.5 1 9 0" strokeWidth="2" />
+  </svg>
+);
+
 const IconWaveform = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <path d="M2 10v4M6 6v12M10 3v18M14 8v8M18 5v14M22 10v4" />
@@ -435,11 +452,14 @@ export default function App() {
       {/* ── Header ── */}
       <header className="site-header">
         <div className="site-branding">
-          <div className="site-logo-badge">
-            <IconWaveform />
+          <div className="site-logo-badge lotus-badge" title="Swar (स्वर) — Acoustic Speech Intelligence">
+            <IconLotus />
           </div>
           <div>
-            <h1 className="site-title">Swar <span className="hindi-badge">स्वर</span></h1>
+            <h1 className="site-title">
+              <span className="hindi-main-title">स्वर</span>
+              <span className="latin-sub-badge">SWAR</span>
+            </h1>
             <p className="site-tagline">Speech Intelligence &amp; Acoustic Graph Diarization Engine</p>
           </div>
         </div>
