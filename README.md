@@ -11,30 +11,36 @@
   <img src="assets/swar_dashboard.jpg" alt="Swar Speech Intelligence Dashboard" width="100%" style="border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
 </p>
 
-**Swar** is an end-to-end, privacy-first speech intelligence platform capable of transcribing, translating, and diarizing multi-speaker audio with acoustic graph precision. Powered by **Faster-Whisper Turbo** and **SpeechBrain ECAPA-TDNN** on CUDA, Swar decouples acoustic vocal tract clustering from linguistic text, ensuring reliable speaker identification without cross-talk bleed or hallucinated punctuation boundaries.
+**Swar (स्वर)** is an open-source, privacy-first, self-hosted reference stack for automated speech recognition (ASR), acoustic speaker diarization, and structured meeting intelligence. 
+
+Designed for organizations and developers who need **100% local, air-gapped data confidentiality** (e.g. legal depositions, healthcare consultations, and internal executive meetings), Swar combines modern open-source foundations—**Faster-Whisper Turbo**, **SpeechBrain ECAPA-TDNN**, **PostgreSQL with `pgvector`**, and **Google Gemini**—into a cohesive, containerized pipeline.
 
 ---
 
 ## 📑 Table of Contents
-1. [Core Capabilities](#-core-capabilities)
+1. [Core Capabilities & Scope](#-core-capabilities--scope)
 2. [Architecture Overview](#-architecture-overview)
 3. [Quickstart (Docker)](#-quickstart-docker)
-4. [REST API Documentation](#-rest-api-documentation)
-5. [Database Schema](#-database-schema)
-6. [Documentation Sitemap](#-documentation-sitemap)
-7. [License](#-license)
+4. [Python SDK & CLI Usage](#-python-sdk--cli-usage)
+5. [REST API Documentation](#-rest-api-documentation)
+6. [Database Schema](#-database-schema)
+7. [Production Hardening & Security Checklist](#-production-hardening--security-checklist)
+8. [Documentation Sitemap](#-documentation-sitemap)
+9. [Hardware Sizing & FAQ](#-hardware-requirements--sizing)
 
 ---
 
-## 🌟 Core Capabilities
+## 🌟 Core Capabilities & Scope
 
-* **🌐 99+ Languages & Real-Time English Translation:** Transcribe native speech or translate non-English audio directly into English using Whisper Turbo.
-* **🔬 Acoustic-First VAD Segmentation:** Anchors speaker turns to physical acoustic silence pauses ($\ge 280\text{ms}$) rather than error-prone punctuation heuristics.
-* **🛡️ Circular Self-Reflection Padding:** Guarantees pure acoustic embeddings for short utterances (*"Yeah"*, *"Okay"*) with zero neighbor contamination.
-* **📊 Adaptive Spectral Graph Diarization:** Dynamically estimates speaker counts ($K$) using Laplacian Eigengap analysis and percentile-based similarity graphs.
-* **⭐ Multi-Sample Gaussian Voiceprint Library:** Enrolls and tracks speaker voiceprints across different microphones using continuous Gaussian centroid updates ($\mathbf{c}_{t+1} = \frac{N\mathbf{c}_t + \mathbf{e}}{N+1}$).
-* **🧹 Automated Storage Lifecycle:** MinIO bucket policy automatically purges heavy raw video uploads after 48 hours while preserving lightweight transcripts and telemetry in PostgreSQL.
-* **⚖️ GDPR & CCPA Compliance:** Dedicated Right-to-be-Forgotten endpoints (`DELETE /api/speaker/:id`) and full biometric audit logging.
+* **🔒 100% Air-Gapped / Local Operation:** Audio decoding, VAD slicing, Whisper transcription, and ECAPA speaker embeddings run completely on your local GPU container—zero audio exfiltration.
+* **🌐 Multilingual ASR via Whisper:** Transcribe or translate speech across Whisper's ~99 supported languages (accuracy scales with language resource availability).
+* **🔬 Acoustic-First VAD Segmentation:** Separates dialogue turns based on physical silence pauses ($\ge 280\text{ms}$) and acoustic energy drops rather than heuristic punctuation.
+* **🛡️ Circular Self-Reflection Padding:** Eliminates neighbor voice bleed on short utterances (*"Yeah"*, *"Okay"*) by circularly repeating the target speaker's syllables up to 2.5s.
+* **📊 Adaptive Graph Diarization:** Clusters 192-dimensional ECAPA-TDNN embeddings using normalized graph Laplacians, Eigengap heuristic estimation, and SciPy hierarchical linkage.
+* **⭐ Multi-Sample Gaussian Voiceprint Library:** Persists speaker acoustic profiles in PostgreSQL `pgvector`, updating running centroids ($\mathbf{c}_{t+1} = \frac{N\mathbf{c}_t + \mathbf{e}}{N+1}$) across recordings.
+* **🧠 Gemini Meeting Intelligence:** Extracts executive summaries, timestamped chapters, speaker action items, and key notes via Google Gemini 2.5 Flash.
+* **🧹 48-Hour Auto-Purge Lifecycle:** Automatic MinIO bucket lifecycle purging for heavy raw media while preserving lightweight transcripts and metadata.
+* **⚖️ Biometric GDPR Compliance:** One-click Right-to-be-Forgotten profile deletion (`DELETE /api/speaker/:id`) with persistent audit logs.
 
 ---
 
@@ -173,6 +179,18 @@ CREATE TABLE transcripts (
   end_time FLOAT NOT NULL
 );
 
+-- Meeting intelligence & notes
+CREATE TABLE meeting_intelligence (
+  job_id UUID PRIMARY KEY REFERENCES jobs(id) ON DELETE CASCADE,
+  executive_summary TEXT,
+  key_notes JSONB,
+  action_items JSONB,
+  chapters JSONB,
+  decisions JSONB,
+  raw_markdown TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Multi-sample biometric voiceprint library
 CREATE TABLE enrolled_speakers (
   id SERIAL PRIMARY KEY,
@@ -191,6 +209,43 @@ CREATE TABLE voiceprint_audit_logs (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
+
+---
+
+## 💻 Python SDK & CLI Usage
+
+Swar can be used headless as a standalone Python library or command-line utility without Docker:
+
+```bash
+# 1. Install locally
+pip install -e .
+
+# 2. Run via Terminal CLI
+swar process interview.mp4 --export-srt subtitles.srt --export-md report.md
+
+# 3. Use in Python code
+from swar import SwarEngine
+
+engine = SwarEngine(device="cuda")
+result = engine.process("podcast.mp3")
+
+for turn in result.turns:
+    print(f"[{turn.start:.1f}s → {turn.end:.1f}s] {turn.speaker}: {turn.text}")
+```
+
+---
+
+## 🔒 Production Hardening & Security Checklist
+
+When deploying Swar into production environments, review the following security baseline:
+
+| Security Domain | Developer Default | Production Recommendation |
+| :--- | :--- | :--- |
+| **Database & MinIO Credentials** | `postgres:postgres`, `minioadmin` | Rotate secrets in `.env` and pass via AWS Secrets Manager or HashiCorp Vault. |
+| **CORS Policy** | Permissive for dev (`origin: '*'`) | Restrict `origin` to trusted frontend domain in Fastify server configuration. |
+| **Rate Limiting & DoS** | None | Add `@fastify/rate-limit` (e.g. max 10 uploads/min per IP) or Cloudflare WAF. |
+| **API Authentication** | Open endpoints | Enforce Bearer JWT or API Key middleware on all `/api/*` routes. |
+| **File Validation** | MIME type header | Validate magic bytes (audio header signatures) on backend upload streams. |
 
 ---
 
