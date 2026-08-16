@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import "./index.css";
+import swarLotusLogo from "./assets/swar_lotus_logo.jpg";
 
 /* Supported languages */
 const LANGUAGES = [
@@ -453,7 +454,7 @@ export default function App() {
       <header className="site-header">
         <div className="site-branding">
           <div className="site-logo-badge lotus-badge" title="Swar (स्वर) — Acoustic Speech Intelligence">
-            <IconLotus />
+            <img src={swarLotusLogo} alt="Swar Kamal Logo" className="site-logo-image" />
           </div>
           <div>
             <h1 className="site-title">
