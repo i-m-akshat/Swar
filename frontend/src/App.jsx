@@ -92,6 +92,13 @@ const IconTrash = () => (
   </svg>
 );
 
+const IconSparkles = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+    <path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>
+  </svg>
+);
+
 /* ─────────────────────── App Component ──────────────────────── */
 export default function App() {
   const [file, setFile]                   = useState(null);
@@ -105,6 +112,11 @@ export default function App() {
   const [allBenchmarks, setAllBenchmarks] = useState([]);
   const [currentTime, setCurrentTime]     = useState(0);
   const [playbackRate, setPlaybackRate]   = useState(1.0);
+
+  // Tab State: 'transcript' vs 'intelligence'
+  const [activeTab, setActiveTab]         = useState("transcript");
+  const [intelligence, setIntelligence]   = useState(null);
+  const [isSummarizing, setIsSummarizing] = useState(false);
 
   // Enrolled Speakers Library
   const [enrolledSpeakers, setEnrolledSpeakers] = useState([]);
@@ -134,6 +146,9 @@ export default function App() {
             setStatus(data.job.status);
             setTranscripts(data.transcripts || []);
             setBenchmarks(data.benchmarks || null);
+            if (data.job.status === "completed") {
+              fetchIntelligence(jobId);
+            }
           }
         } catch (e) {
           console.error("Poll error:", e);
@@ -168,6 +183,20 @@ export default function App() {
     }
   };
 
+  const fetchIntelligence = async (id) => {
+    try {
+      const res = await fetch(`/api/job/${id}/summary`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.intelligence) {
+          setIntelligence(data.intelligence);
+        }
+      }
+    } catch (e) {
+      console.error("Error fetching intelligence:", e);
+    }
+  };
+
   useEffect(() => {
     fetchBenchmarks();
     fetchEnrolledSpeakers();
@@ -198,6 +227,7 @@ export default function App() {
     setStatus("uploading");
     setTranscripts([]);
     setBenchmarks(null);
+    setIntelligence(null);
     setVideoUrl(URL.createObjectURL(file));
 
     const fd = new FormData();
@@ -218,6 +248,23 @@ export default function App() {
     }
   };
 
+  /* Generate Gemini Meeting Intelligence */
+  const handleGenerateIntelligence = async () => {
+    if (!jobId) return;
+    setIsSummarizing(true);
+    try {
+      const res = await fetch(`/api/job/${jobId}/summarize`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setIntelligence(data.intelligence);
+      }
+    } catch (e) {
+      console.error("Failed to generate intelligence:", e);
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
   /* Rename Speaker across Job + Optional Multi-Sample Voiceprint Enrollment */
   const handleRenameSubmit = async (e) => {
     e.preventDefault();
@@ -225,7 +272,6 @@ export default function App() {
     if (!newName || !jobId) return;
 
     try {
-      // 1. Optionally enroll into multi-sample voiceprint library
       if (renameModal.saveVoiceprint) {
         setEnrollStatus(`Enrolling '${newName}' voiceprint...`);
         await fetch("/api/speaker/enroll", {
@@ -243,7 +289,6 @@ export default function App() {
         }, 2000);
       }
 
-      // 2. Rename in database
       const res = await fetch("/api/speaker/rename", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -265,7 +310,7 @@ export default function App() {
     }
   };
 
-  /* Delete Enrolled Speaker (GDPR / Right to be forgotten) */
+  /* Delete Enrolled Speaker (GDPR) */
   const handleDeleteEnrolled = async (id) => {
     try {
       const res = await fetch(`/api/speaker/${id}`, { method: "DELETE" });
@@ -277,14 +322,35 @@ export default function App() {
     }
   };
 
-  /* Distinct Speaker List with Counts */
-  const speakerStats = useMemo(() => {
-    const counts = {};
+  /* Speaker Dynamics & Talk-Time Analytics HUD Calculations */
+  const speakerDynamics = useMemo(() => {
+    if (transcripts.length === 0) return [];
+    const stats = {};
+    let totalDuration = 0;
+
     for (const t of transcripts) {
-      const name = t.speaker_name || "Unknown";
-      counts[name] = (counts[name] || 0) + 1;
+      const spk = t.speaker_name || "Unknown";
+      const dur = Math.max(0.1, t.end_time - t.start_time);
+      const words = t.text.trim().split(/\s+/).filter(Boolean).length;
+      totalDuration += dur;
+
+      if (!stats[spk]) {
+        stats[spk] = { name: spk, duration: 0, turns: 0, words: 0 };
+      }
+      stats[spk].duration += dur;
+      stats[spk].turns += 1;
+      stats[spk].words += words;
     }
-    return Object.entries(counts).map(([name, count]) => ({ name, count }));
+
+    return Object.values(stats).map(s => {
+      const percent = totalDuration > 0 ? (s.duration / totalDuration) * 100 : 0;
+      const wpm = s.duration > 0 ? Math.round((s.words / s.duration) * 60) : 0;
+      return {
+        ...s,
+        percent: Math.round(percent),
+        wpm
+      };
+    }).sort((a, b) => b.duration - a.duration);
   }, [transcripts]);
 
   /* Set of enrolled names for quick badge checks */
@@ -342,6 +408,26 @@ export default function App() {
     a.click();
   };
 
+  /* Download Full Meeting Markdown (.md) */
+  const downloadMarkdownReport = () => {
+    let mdContent = intelligence?.raw_markdown;
+    if (!mdContent) {
+      mdContent = `# 🎙️ Vocalis Dialogue Transcript\n\n` +
+        transcripts.map(t => `**[${fmt(t.start_time)} → ${fmt(t.end_time)}] ${t.speaker_name || "Unknown"}:**\n${t.text}\n`).join("\n");
+    }
+    const blob = new Blob([mdContent], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `vocalis-report-${jobId || "export"}.md`;
+    a.click();
+  };
+
+  /* Print / Save Formatted PDF */
+  const handlePrintPDF = () => {
+    window.print();
+  };
+
   const isProcessing = status === "processing" || status === "uploading";
 
   return (
@@ -368,7 +454,7 @@ export default function App() {
             Voiceprint Library ({enrolledSpeakers.length})
           </button>
           <span className="telemetry-pill">🌐 99+ Languages</span>
-          <span className="telemetry-pill">🛡️ 48h Storage Lifecycle Active</span>
+          <span className="telemetry-pill">🛡️ 48h Storage Auto-Purge</span>
         </div>
       </header>
 
@@ -517,12 +603,58 @@ export default function App() {
             </div>
           )}
 
+          {/* Speaker Dynamics & Talk-Time Analytics HUD */}
+          {speakerDynamics.length > 0 && (
+            <div className="speaker-dynamics-section">
+              <div className="dynamics-header">
+                <span className="roster-heading">Speaker Dynamics &amp; Talk-Time</span>
+              </div>
+              
+              {/* Talk Time Proportion Bar */}
+              <div className="talk-time-bar-container">
+                <div className="talk-time-bar">
+                  {speakerDynamics.map((spk) => (
+                    <div
+                      key={spk.name}
+                      className={`talk-time-slice ${getSpeakerClass(spk.name)}`}
+                      style={{ width: `${spk.percent}%` }}
+                      title={`${spk.name}: ${spk.percent}% talk time`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Individual Dynamics Grid */}
+              <div className="speaker-dynamics-grid">
+                {speakerDynamics.map((spk) => {
+                  const isEnrolled = enrolledNameSet.has(spk.name.toLowerCase());
+                  return (
+                    <div key={spk.name} className="dynamics-card">
+                      <div className="dynamics-top">
+                        <span className={`dynamics-name ${getSpeakerClass(spk.name)}`}>
+                          {isEnrolled && "⭐ "}
+                          {spk.name}
+                        </span>
+                        <span className="dynamics-percent">{spk.percent}%</span>
+                      </div>
+                      <div className="dynamics-stats">
+                        <span>⏱️ {fmt(spk.duration)}</span>
+                        <span>💬 {spk.turns} turns</span>
+                        <span>⚡ {spk.wpm} WPM</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Speaker Roster Bar */}
-          {speakerStats.length > 0 && (
+          {speakerDynamics.length > 0 && (
             <div className="speaker-roster-section">
-              <span className="roster-heading">Identified Speakers ({speakerStats.length}):</span>
+              <span className="roster-heading">Identified Speakers ({speakerDynamics.length}):</span>
               <div className="speaker-roster-chips">
-                {speakerStats.map(({ name, count }) => {
+                {speakerDynamics.map(({ name, turns }) => {
                   const isEnrolled = enrolledNameSet.has(name.toLowerCase());
                   return (
                     <button
@@ -533,7 +665,7 @@ export default function App() {
                     >
                       {isEnrolled && <span className="enrolled-badge-star" title="Enrolled Voiceprint Profile">⭐</span>}
                       <span>{name}</span>
-                      <span className="roster-count">{count} turns</span>
+                      <span className="roster-count">{turns} turns</span>
                       <IconEdit />
                     </button>
                   );
@@ -543,112 +675,234 @@ export default function App() {
           )}
         </div>
 
-        {/* Transcript Column */}
+        {/* Right View: Synchronized Dialogue OR Gemini Meeting Intelligence */}
         <div className="panel transcript-panel">
           <div className="panel-header transcript-header-row">
-            <div className="transcript-title-group">
-              <span className="panel-title">Transcript</span>
-              {transcripts.length > 0 && (
-                <span className="panel-badge">{filteredTranscripts.length} turns</span>
-              )}
+            {/* View Switcher Tabs */}
+            <div className="tab-switcher">
+              <button
+                className={`tab-btn ${activeTab === "transcript" ? "active" : ""}`}
+                onClick={() => setActiveTab("transcript")}
+              >
+                📝 Dialogue ({filteredTranscripts.length})
+              </button>
+              <button
+                className={`tab-btn ${activeTab === "intelligence" ? "active" : ""}`}
+                onClick={() => setActiveTab("intelligence")}
+              >
+                🧠 Gemini Intelligence {intelligence ? "✨" : ""}
+              </button>
             </div>
 
-            {/* Transcript Actions */}
+            {/* Global Export Hub */}
             {transcripts.length > 0 && (
               <div className="transcript-actions">
-                <button className="icon-btn" onClick={copyFullTranscript} title="Copy Full Transcript">
+                <button className="icon-btn" onClick={downloadMarkdownReport} title="Download Full Markdown Report (.md)">
+                  <IconDownload /> .MD
+                </button>
+                <button className="icon-btn" onClick={handlePrintPDF} title="Print or Save Formatted PDF">
+                  <IconDownload /> PDF
+                </button>
+                <button className="icon-btn" onClick={copyFullTranscript} title="Copy Transcript to Clipboard">
                   <IconCopy /> {copySuccess ? "Copied!" : "Copy"}
                 </button>
-                <button className="icon-btn" onClick={downloadText} title="Download TXT">
-                  <IconDownload /> TXT
-                </button>
                 <button className="icon-btn" onClick={downloadSRT} title="Download Subtitles SRT">
-                  <IconDownload /> SRT
+                  SRT
                 </button>
               </div>
             )}
           </div>
 
-          {/* Search & Filter Controls */}
-          {transcripts.length > 0 && (
-            <div className="transcript-filters">
-              <div className="search-box">
-                <IconSearch />
-                <input
-                  type="text"
-                  placeholder="Search dialogue keywords..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="search-input"
-                />
-                {searchQuery && (
-                  <button className="clear-search" onClick={() => setSearchQuery("")}>×</button>
+          {/* TAB 1: Synchronized Dialogue Transcript */}
+          {activeTab === "transcript" && (
+            <>
+              {transcripts.length > 0 && (
+                <div className="transcript-filters">
+                  <div className="search-box">
+                    <IconSearch />
+                    <input
+                      type="text"
+                      placeholder="Search dialogue keywords..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="search-input"
+                    />
+                    {searchQuery && (
+                      <button className="clear-search" onClick={() => setSearchQuery("")}>×</button>
+                    )}
+                  </div>
+
+                  {speakerDynamics.length > 1 && (
+                    <select
+                      className="speaker-filter-select"
+                      value={selectedSpeaker}
+                      onChange={(e) => setSelectedSpeaker(e.target.value)}
+                    >
+                      <option value="all">All Speakers ({speakerDynamics.length})</option>
+                      {speakerDynamics.map(({ name }) => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+
+              <div className="transcript-body" ref={transcriptRef}>
+                {transcripts.length === 0 ? (
+                  <div className="transcript-empty">
+                    <IconWaveform />
+                    <span>{isProcessing ? "Transcribing & identifying speakers..." : "Awaiting media upload"}</span>
+                  </div>
+                ) : filteredTranscripts.length === 0 ? (
+                  <div className="transcript-empty">
+                    <span>No dialogue matching "{searchQuery}"</span>
+                  </div>
+                ) : (
+                  filteredTranscripts.map((t, i) => {
+                    const isActive = currentTime >= t.start_time && currentTime <= t.end_time;
+                    const isEnrolled = enrolledNameSet.has((t.speaker_name || "").toLowerCase());
+                    return (
+                      <div
+                        key={t.id || i}
+                        className={`transcript-segment${isActive ? " active" : ""}`}
+                        onClick={() => {
+                          if (videoRef.current) {
+                            videoRef.current.currentTime = t.start_time;
+                            videoRef.current.play();
+                          }
+                        }}
+                      >
+                        <div className="segment-meta">
+                          <button
+                            className={`speaker-chip ${getSpeakerClass(t.speaker_name)}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRenameModal({ open: true, oldName: t.speaker_name || "Unknown", newName: t.speaker_name || "", saveVoiceprint: true });
+                            }}
+                            title="Click to rename speaker / enroll voiceprint"
+                          >
+                            {isEnrolled && <span className="enrolled-badge-star" title="Enrolled Voiceprint Profile">⭐ </span>}
+                            {t.speaker_name || "Unknown"}
+                          </button>
+                          <span className="segment-time">{fmt(t.start_time)} → {fmt(t.end_time)}</span>
+                        </div>
+                        <p className="segment-text">
+                          {searchQuery ? highlightText(t.text, searchQuery) : t.text}
+                        </p>
+                      </div>
+                    );
+                  })
                 )}
               </div>
+            </>
+          )}
 
-              {speakerStats.length > 1 && (
-                <select
-                  className="speaker-filter-select"
-                  value={selectedSpeaker}
-                  onChange={(e) => setSelectedSpeaker(e.target.value)}
-                >
-                  <option value="all">All Speakers ({speakerStats.length})</option>
-                  {speakerStats.map(({ name }) => (
-                    <option key={name} value={name}>{name}</option>
-                  ))}
-                </select>
+          {/* TAB 2: Gemini Meeting Intelligence */}
+          {activeTab === "intelligence" && (
+            <div className="intelligence-body">
+              {!intelligence && !isSummarizing && (
+                <div className="intelligence-placeholder">
+                  <IconSparkles />
+                  <h3>Generate Executive Intelligence</h3>
+                  <p>Use Google Gemini to extract executive summaries, key notes, speaker action items, and timestamped chapters from this conversation.</p>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleGenerateIntelligence}
+                    disabled={transcripts.length === 0}
+                  >
+                    ✨ Generate Meeting Intelligence
+                  </button>
+                </div>
+              )}
+
+              {isSummarizing && (
+                <div className="intelligence-placeholder">
+                  <span className="status-dot processing" style={{ width: 16, height: 16 }} />
+                  <h3>Analyzing Conversation with Gemini...</h3>
+                  <p>Extracting key takeaways, speaker commitments, and chapter markers.</p>
+                </div>
+              )}
+
+              {intelligence && (
+                <div className="intelligence-content">
+                  {/* Executive Summary */}
+                  <div className="intelligence-card">
+                    <h4 className="card-heading">🎯 Executive Summary</h4>
+                    <p className="summary-text">{intelligence.executive_summary}</p>
+                  </div>
+
+                  {/* Chapters */}
+                  {intelligence.chapters?.length > 0 && (
+                    <div className="intelligence-card">
+                      <h4 className="card-heading">📌 Timeline Chapters</h4>
+                      <div className="chapters-list">
+                        {intelligence.chapters.map((c, idx) => (
+                          <button
+                            key={idx}
+                            className="chapter-chip"
+                            onClick={() => {
+                              if (videoRef.current) {
+                                videoRef.current.currentTime = c.start_time || 0;
+                                videoRef.current.play();
+                              }
+                            }}
+                          >
+                            <span className="chapter-time">{c.time_str}</span>
+                            <span className="chapter-title">{c.title}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Key Notes */}
+                  {intelligence.key_notes?.length > 0 && (
+                    <div className="intelligence-card">
+                      <h4 className="card-heading">📝 Key Takeaways &amp; Notes</h4>
+                      <ul className="notes-list">
+                        {intelligence.key_notes.map((note, idx) => (
+                          <li key={idx}>{note}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Action Items */}
+                  {intelligence.action_items?.length > 0 && (
+                    <div className="intelligence-card">
+                      <h4 className="card-heading">✅ Action Items &amp; Commitments</h4>
+                      <div className="action-items-list">
+                        {intelligence.action_items.map((item, idx) => (
+                          <div key={idx} className="action-item-row">
+                            <input type="checkbox" className="action-checkbox" />
+                            <div className="action-item-details">
+                              <span className="action-speaker">@{item.speaker}</span>
+                              <span className="action-task">{item.task}</span>
+                            </div>
+                            <span className={`priority-tag ${item.priority?.toLowerCase()}`}>
+                              {item.priority}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Key Decisions */}
+                  {intelligence.decisions?.length > 0 && (
+                    <div className="intelligence-card">
+                      <h4 className="card-heading">💡 Key Decisions Reached</h4>
+                      <ul className="notes-list">
+                        {intelligence.decisions.map((d, idx) => (
+                          <li key={idx}>✅ {d}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}
-
-          {/* Transcript Scroll Area */}
-          <div className="transcript-body" ref={transcriptRef}>
-            {transcripts.length === 0 ? (
-              <div className="transcript-empty">
-                <IconWaveform />
-                <span>{isProcessing ? "Transcribing & identifying speakers..." : "Awaiting media upload"}</span>
-              </div>
-            ) : filteredTranscripts.length === 0 ? (
-              <div className="transcript-empty">
-                <span>No dialogue matching "{searchQuery}"</span>
-              </div>
-            ) : (
-              filteredTranscripts.map((t, i) => {
-                const isActive = currentTime >= t.start_time && currentTime <= t.end_time;
-                const isEnrolled = enrolledNameSet.has((t.speaker_name || "").toLowerCase());
-                return (
-                  <div
-                    key={t.id || i}
-                    className={`transcript-segment${isActive ? " active" : ""}`}
-                    onClick={() => {
-                      if (videoRef.current) {
-                        videoRef.current.currentTime = t.start_time;
-                        videoRef.current.play();
-                      }
-                    }}
-                  >
-                    <div className="segment-meta">
-                      <button
-                        className={`speaker-chip ${getSpeakerClass(t.speaker_name)}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setRenameModal({ open: true, oldName: t.speaker_name || "Unknown", newName: t.speaker_name || "", saveVoiceprint: true });
-                        }}
-                        title="Click to rename speaker / enroll voiceprint"
-                      >
-                        {isEnrolled && <span className="enrolled-badge-star" title="Enrolled Voiceprint Profile">⭐ </span>}
-                        {t.speaker_name || "Unknown"}
-                      </button>
-                      <span className="segment-time">{fmt(t.start_time)} → {fmt(t.end_time)}</span>
-                    </div>
-                    <p className="segment-text">
-                      {searchQuery ? highlightText(t.text, searchQuery) : t.text}
-                    </p>
-                  </div>
-                );
-              })
-            )}
-          </div>
         </div>
       </div>
 

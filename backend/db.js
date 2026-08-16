@@ -57,6 +57,17 @@ async function initDB(retries = 5, delay = 2000) {
             details TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           );
+
+          CREATE TABLE IF NOT EXISTS meeting_intelligence (
+            job_id UUID PRIMARY KEY REFERENCES jobs(id) ON DELETE CASCADE,
+            executive_summary TEXT,
+            key_notes JSONB,
+            action_items JSONB,
+            chapters JSONB,
+            decisions JSONB,
+            raw_markdown TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
         `);
         console.log("Database tables initialized.");
         return;
