@@ -491,7 +491,7 @@ def spectral_diarize(
 
         for enrolled in enrolled_list:
             sim = float(np.dot(centroid, enrolled["embedding"]))
-            if sim > best_match_sim and sim >= 0.65:
+            if sim > best_match_sim and sim >= 0.54:
                 best_match_sim = sim
                 best_match_name = enrolled["name"]
 
@@ -539,15 +539,15 @@ async def handle_enroll_speaker(job):
     try:
         cur = conn.cursor()
         cur.execute(
-            "SELECT start_time, end_time FROM transcripts WHERE job_id = %s AND speaker_name = %s ORDER BY (end_time - start_time) DESC LIMIT 5",
-            (job_id, speaker_name)
+            "SELECT start_time, end_time FROM transcripts WHERE job_id = %s AND (speaker_name = %s OR speaker_name = %s) ORDER BY (end_time - start_time) DESC LIMIT 8",
+            (job_id, speaker_name, name)
         )
         rows = cur.fetchall()
         if not rows:
-            print(f"[Enrollment] No transcripts found for job {job_id} and speaker {speaker_name}")
+            print(f"[Enrollment] No transcripts found for job {job_id} with speaker '{speaker_name}' or '{name}'")
             return
             
-        objects = list(minio_client.list_objects("videos", prefix=job_id))
+        objects = [obj for obj in minio_client.list_objects("videos", prefix=job_id, recursive=True) if not obj.is_dir]
         if not objects:
             print(f"[Enrollment] No video file found in MinIO for job {job_id}")
             return

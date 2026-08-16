@@ -225,7 +225,25 @@ export default function App() {
     if (!newName || !jobId) return;
 
     try {
-      // 1. Rename in database
+      // 1. Optionally enroll into multi-sample voiceprint library
+      if (renameModal.saveVoiceprint) {
+        setEnrollStatus(`Enrolling '${newName}' voiceprint...`);
+        await fetch("/api/speaker/enroll", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: newName,
+            jobId,
+            speakerName: renameModal.oldName
+          })
+        });
+        setTimeout(() => {
+          fetchEnrolledSpeakers();
+          setEnrollStatus("");
+        }, 2000);
+      }
+
+      // 2. Rename in database
       const res = await fetch("/api/speaker/rename", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -239,24 +257,6 @@ export default function App() {
         setTranscripts(prev =>
           prev.map(t => t.speaker_name === renameModal.oldName ? { ...t, speaker_name: newName } : t)
         );
-      }
-
-      // 2. Optionally enroll into multi-sample voiceprint library
-      if (renameModal.saveVoiceprint) {
-        setEnrollStatus("Enrolling voiceprint...");
-        await fetch("/api/speaker/enroll", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: newName,
-            jobId,
-            speakerName: renameModal.oldName
-          })
-        });
-        setTimeout(() => {
-          fetchEnrolledSpeakers();
-          setEnrollStatus("");
-        }, 3000);
       }
 
       setRenameModal({ open: false, oldName: "", newName: "", saveVoiceprint: true });
